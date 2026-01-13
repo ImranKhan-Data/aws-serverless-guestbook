@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Guestbook | Serverless Demo</title>
+    <style>
+        /* Modern Reset & Base Styles */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+
+        /* The Card Container */
+        .card {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        .card:hover { transform: translateY(-5px); }
+
+        /* Typography */
+        h1 { font-size: 1.8rem; margin-bottom: 0.5rem; color: #1a202c; }
+        p { color: #718096; margin-bottom: 2rem; font-size: 0.95rem; }
+
+        /* Form Elements */
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+            outline: none;
+        }
+        input:focus { border-color: #667eea; }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover { background: #5a67d8; }
+        button:disabled { background: #cbd5e0; cursor: not-allowed; }
+
+        /* Status Messages */
+        #status {
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            min-height: 20px;
+        }
+        .success { color: #48bb78; }
+        .error { color: #f56565; }
+
+        /* Footer */
+        .footer { margin-top: 2rem; font-size: 0.75rem; color: #a0aec0; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h1>☁️ Cloud Guestbook</h1>
+        <p>Leave a permanent mark on my Serverless Database.</p>
+
+        <input type="text" id="msg" placeholder="Type your message..." autocomplete="off">
+        <button onclick="submitToAPI()" id="btn">Sign Guestbook</button>
+
+        <p id="status"></p>
+
+        <div class="footer">Powered by AWS Lambda & DynamoDB</div>
+    </div>
+
+    <script>
+
+        const apiUrl = "https://87k5ssy4x9.execute-api.eu-central-1.amazonaws.com/prod/submit"; 
+
+        async function submitToAPI() {
+            const input = document.getElementById("msg");
+            const btn = document.getElementById("btn");
+            const status = document.getElementById("status");
+            const message = input.value;
+
+            if (!message) return;
+
+            // UI Loading State
+            btn.innerText = "Sending...";
+            btn.disabled = true;
+            status.innerText = "";
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: message })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    status.innerText = "✨ Success! Written to the Cloud.";
+                    status.className = "success";
+                    input.value = ""; // Clear input
+                } else {
+                    status.innerText = "❌ Error: " + JSON.stringify(data);
+                    status.className = "error";
+                }
+            } catch (error) {
+                status.innerText = "❌ Network Error. Check CORS.";
+                status.className = "error";
+            } finally {
+                // Reset Button
+                btn.innerText = "Sign Guestbook";
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
